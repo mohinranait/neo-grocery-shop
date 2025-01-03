@@ -1,17 +1,17 @@
 const createError = require("http-errors");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { productionMode, jwtSecret, CLIENT_URL } = require("../accessEnv");
+const { productionMode, jwtSecret, CLIENT_URL, JWT_REGISTER_SECRET } = require("../accessEnv");
 const { loginSchema, registerSchema } = require("../utils/userValidation");
 const { successResponse } = require("../utils/responseHandler");
 const User = require("../models/UserModel");
 const sendEmailByNodeMailer = require("../utils/email");
+const { createJwtToken } = require("../utils/jwt_token");
 
 // Create new user
-const createNewUser = async (req, res,next) => {
+const registerNewUser = async (req, res,next) => {
     try {
         const {name, email, password } = req.body || {};
-        const body = req.body;
         const {firstName, lastName} = name || {};
 
         // Input validation
@@ -24,39 +24,85 @@ const createNewUser = async (req, res,next) => {
        const isExists = await User.findOne({email});
        if(isExists)  throw createError(409, "This email already exists");
        
+       
+        // Create token from register data
+        const token = await createJwtToken( {
+            firstName,
+            lastName,
+            email,
+            password,
+
+        }, JWT_REGISTER_SECRET, '30m')
+
+        // Formate email template
         const emailData = {
             emails: email,
             subject: "Account verify email",
             text: "Hello world",
             html: `
             <h2>Hello ${firstName} </h2>
-            <p> <a href='${CLIENT_URL}/login/verify'>Click here for verify your account</a> </p>
+            <p> <a href='${CLIENT_URL}/verify/${token}'>Click here for verify your account</a> </p>
             `
         }
 
         try {
+            // Send email for email verification
             await sendEmailByNodeMailer(emailData)
         } catch (emailError) {
             next( createError(500, "Send to fail verification email") )
         }
 
+
+        return successResponse(res, {
+            message: `Please check ${email} and verify now `,
+            payload: token,
+            statusCode:200
+        })
+
+    
+    } catch (error) {
+        next(error)
+    }
+}
+
+const verifyRegisterProcess = async (req, res, next) => {
+    try {
+        const token = req.body?.token;
+        if(!token) throw createError(401, "Token not found");
+
+        const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
+        console.log({decoded});
+        
+        const userData = {
+            name: {
+                firstName: decoded?.firstName,
+                lastName: decoded?.lastName,
+            },
+            email: decoded?.email,
+            verify:{
+                email:true,
+            }
+        }
+
+        const password = decoded.password;
+        console.log({userData, password});
+        
         // Hash password
         const salt = bcrypt.genSaltSync(10);
         const hashPassword = bcrypt.hashSync(password, salt);
 
-        let user =  await User.create({...body, password: hashPassword })
+        let user =  await User.create({...userData, password: hashPassword })
         user = user.toObject()
         delete user.password;
     
         if(!user) throw createError(404, "User don't created")
 
         return successResponse(res, {
-            message: "User created",
-            payload: user,
-            statusCode:201
+            message:"Success",
+            statusCode:201,
+            payload: user
         })
 
-    
     } catch (error) {
         next(error)
     }
@@ -276,7 +322,8 @@ const logoutUser = async (req, res, next) => {
 
 
 module.exports = {
-    createNewUser,
+    registerNewUser,
+    verifyRegisterProcess,
     loginUser ,
     logoutUser,
     findUserById,

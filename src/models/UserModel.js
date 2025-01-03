@@ -19,11 +19,9 @@ const userSchema = new Schema({
         trim:true,
         unique: true,
     },
-    email: {
-        type: String,
-        required: true,
-        trim:true,
-        unique: true,
+    verify:{
+        email: Boolean,
+        phone: Boolean,
     },
     phone: {
         type: String,

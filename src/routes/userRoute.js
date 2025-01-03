@@ -1,12 +1,14 @@
 const userRoute = require("express").Router();
 const { isAuth } = require("../middleware/isAuth");
-const { createNewUser, loginUser, logoutUser, findUserById, getAuthenticatedUser, getAllUsers, updateUserById } = require("../controllers/UserController");
+const {  loginUser, logoutUser, findUserById, getAuthenticatedUser, getAllUsers, updateUserById, registerNewUser, verifyRegisterProcess } = require("../controllers/UserController");
 
 /**
  * User routes for Authentication
  */ 
-// Create new user OR Register
-userRoute.post('/user/create', createNewUser)
+// Register route
+userRoute.post('/user/create', registerNewUser)
+// Verify email and create user
+userRoute.post('/user', verifyRegisterProcess)
 // Login user by email and password
 userRoute.post('/user/login', loginUser)
 // Logout user
