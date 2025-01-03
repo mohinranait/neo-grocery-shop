@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { errorResponse } = require('./utils/responseHandler');
 const { connectMongodbDatabase } = require('./config/connectDb');
-const { userRoute, categoryRoute } = require('./routes');
+const { userRoute, categoryRoute, attributeRoute } = require('./routes');
 
 const app = express();
 
@@ -36,6 +36,7 @@ app.use(cookieParser())
 
 app.use('/api', userRoute);
 app.use('/api', categoryRoute);
+app.use('/api', attributeRoute);
 
 
 app.get('/',(req, res) => {
