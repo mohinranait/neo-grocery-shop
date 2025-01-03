@@ -1,10 +1,10 @@
 /**
  * Generates a slug from a given string.
- * @param name - The input string to generate a slug from.
+ * @param text - The input string to generate a slug from.
  * @returns A URL-friendly slug string.
  */
-const  generateSlug = (name) => {
-    return name
+const  generateSlug = (text) => {
+    return text
       .toLowerCase() 
       .trim() 
       .replace(/[^a-z0-9\s-]/g, '') 

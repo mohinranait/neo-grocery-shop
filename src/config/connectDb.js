@@ -1,6 +1,9 @@
 const { default: mongoose } = require("mongoose");
 const { DATABASE } = require("../accessEnv");
 
+/**
+ * Connect to MongoDB database
+*/
 const connectMongodbDatabase = async () => {
     try {
         await mongoose.connect(DATABASE)
