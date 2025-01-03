@@ -14,13 +14,7 @@ const productSchema = new Schema({
         type : Types.ObjectId,
         ref: "Category",
     },
-    colors : [
-        {
-            label: {type:String},
-            value: {type:String},
-            slug: {type:String},
-        }
-    ],
+   
     details: { type : String},
     rating: { type : Number},
     reviews: { type : Number},
@@ -30,14 +24,18 @@ const productSchema = new Schema({
     },
     isFeature : {
         type : String,
-        default:'inActive'
+        default:'Inactive',
+        enum: ['Active', 'Inactive']
     },
     delivery: {
         deliveryCharge : {
             type: Number,
+            default:0,
         },
         deliveryStatus : {
-            type: String, // Free, pay
+            type: String, 
+            default: "Free",
+            enum:['Free',"Pay"]
         }
     },
     minStock: { 
@@ -48,6 +46,9 @@ const productSchema = new Schema({
         images : [String],
         videoUrl : {type:String}
     },
+    imageGallary:{
+        type: [String],
+    },
     name: {
         type: String,
         trim:true,
@@ -55,10 +56,11 @@ const productSchema = new Schema({
     },
     product_type: { 
         type: String,
-        default: 'physical', // [ Physical, digital]
+        default: 'Physical', 
+        enum: ['Physical', 'Digital']
     },
     price: { 
-        sellingPrice : {
+        sellPrice : {
             type:Number,
             default:0
         },
@@ -66,18 +68,24 @@ const productSchema = new Schema({
             type:Number,
             default:0
         },
-        discountPrice : {
-            type:Number,
-            default:0
+    },
+    offerDate:{
+        start_date: {
+            type : Date,
         },
+        end_date: {
+            type : Date,
+        },
+        offerPrice: {
+            type : Number,
+            default: 0
+        }
     },
     publish_date: {
         type : Date,
         default: Date.now
     },
-    categoryType: { 
-        type: String
-    },
+
     sellQuantity: {
         type:Number,
         default: 0
@@ -93,18 +101,12 @@ const productSchema = new Schema({
         type: String,
     },
     short_details: { type : String},
-    // storage : {
-    //     type : [String],
-    // },
     status : {
         type: String,
-        default: 'active', // [ active, pending]
+        default: 'Active', 
+        enum:['Active', "Inactive"]
     },
     productFeatures : {
-        keyFeatures : {
-            colors: Array,
-            memorys: Array
-        },
         extraFeatures : [
             {
                 label: {type:String},

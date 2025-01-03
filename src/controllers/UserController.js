@@ -1,10 +1,11 @@
 const createError = require("http-errors");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { productionMode, jwtSecret } = require("../accessEnv");
+const { productionMode, jwtSecret, CLIENT_URL } = require("../accessEnv");
 const { loginSchema, registerSchema } = require("../utils/userValidation");
 const { successResponse } = require("../utils/responseHandler");
 const User = require("../models/UserModel");
+const sendEmailByNodeMailer = require("../utils/email");
 
 // Create new user
 const createNewUser = async (req, res,next) => {
@@ -23,6 +24,22 @@ const createNewUser = async (req, res,next) => {
        const isExists = await User.findOne({email});
        if(isExists)  throw createError(409, "This email already exists");
        
+        const emailData = {
+            emails: email,
+            subject: "Account verify email",
+            text: "Hello world",
+            html: `
+            <h2>Hello ${firstName} </h2>
+            <p> <a href='${CLIENT_URL}/login/verify'>Click here for verify your account</a> </p>
+            `
+        }
+
+        try {
+            await sendEmailByNodeMailer(emailData)
+        } catch (emailError) {
+            next( createError(500, "Send to fail verification email") )
+        }
+
         // Hash password
         const salt = bcrypt.genSaltSync(10);
         const hashPassword = bcrypt.hashSync(password, salt);
