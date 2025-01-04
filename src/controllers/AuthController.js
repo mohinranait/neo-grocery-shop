@@ -78,7 +78,6 @@ const verifyRegisterProcess = async (req, res, next) => {
         if(!token) throw createError(401, "Token not found");
 
         const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
-        console.log({decoded});
         
         const userData = {
             name: {
@@ -92,7 +91,6 @@ const verifyRegisterProcess = async (req, res, next) => {
         }
 
         const password = decoded.password;
-        console.log({userData, password});
         
         // Hash password
         const salt = bcrypt.genSaltSync(10);
@@ -126,8 +124,6 @@ const loginUser = async (req, res,next) => {
 
         if(error) throw createError(400, error.details[0].message )
         
-
-    
         // Duplicate user OR email check
         let isExists = await User.findOne({email});
         if(!isExists)  throw createError(404, "not found");
@@ -206,6 +202,13 @@ const forgotPassword = async (req, res, next) => {
         } catch (emailError) {
             next( createError(500, "Send to fail verification email") )
         }
+
+        // Send response
+        return successResponse(res, {
+            message: `Please check ${email} and reset your password `,
+            payload: token,
+            statusCode:200
+        })
     } catch (error) {
         next(error)
     }

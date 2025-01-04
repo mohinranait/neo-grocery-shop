@@ -2,6 +2,7 @@ const attributeRoute = require("./attributeRoute");
 const brandRoute = require("./brandRoute");
 const categoryRoute = require("./categoryRoute");
 const configAttrRoute = require("./configAttributeRoute");
+const productRoute = require("./productRoute");
 const userRoute = require("./userRoute");
 
 module.exports = 
@@ -11,4 +12,5 @@ module.exports =
     attributeRoute,
     configAttrRoute,
     brandRoute,
+    productRoute
 }

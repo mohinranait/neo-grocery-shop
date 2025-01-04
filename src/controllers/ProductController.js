@@ -100,9 +100,53 @@ const getSingleProductBySlug = async (req, res, next) => {
     }
 }
 
+/**
+ * @api {patch} /product/:id Update product by ID
+*/
+const updateProductByID = async (req, res, next) => {
+    try {
+        const authUser = req.user;
+        if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
+        const productId = req.params?.id;
+        const body = req?.body;
+        const product = await Product.findByIdAndUpdate(productId, body, {new:true, runValidators:true});
+        if(!product) throw createError(500, "Product not updated");
+        return successResponse(res, {
+            message: "Product has been updated",
+            payload:product,
+            statusCode:200
+        })   
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+/**
+ * @api {delete} /product/:id Delete product by ID
+*/
+const deleteProductById = async (req, res, next) => {
+    try {
+        const authUser = req.user;
+        if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
+        const productId = req.params?.id;
+        const product = await Product.findByIdAndDelete(productId);
+        if(!product) throw createError(500, "Product not deleted");
+        return successResponse(res, {
+            message: "Product has been deleted",
+            payload:product,
+            statusCode:200
+        })   
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     createNewProduct,
     getAllProducts,
     getSingleProductById,
     getSingleProductBySlug,
+    updateProductByID,
+    deleteProductById
 }
