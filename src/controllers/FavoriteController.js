@@ -9,6 +9,7 @@ const createFavoriteProduct = async (req, res, next) => {
 
         const body = req.body;
         const authId = req?.user?.id;
+         if(!body?.product) throw createError(404, "Product is required")
         const favorite  = await Favorite.create({...body,user:authId});
         if(!favorite) throw createError(404, "Favorite not added");
         return successResponse(res, {
