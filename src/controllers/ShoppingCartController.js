@@ -28,7 +28,13 @@ const addShoppingCart = async (req, res, next) => {
 const getAllShoppingCart = async (req, res, next) => {
     try {
         const authUser = req?.user;
-        const carts = await ShoppingCart.find({user:authUser?.id}).populate("user").populate('product');
+        const carts = await ShoppingCart.find({user:authUser?.id}).populate({
+            path:"user",
+            select:"-password -email -role"
+        }).populate({
+            path:'product',
+            select: "-isStock -isFeature -minStock -sellQuantity -publish_date -createdAt"
+        });
         if(!carts) throw createError(404, "Shopping cart not added");
         return successResponse(res,{
             message:"Success",

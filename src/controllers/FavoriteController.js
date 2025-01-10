@@ -30,7 +30,15 @@ const getFavoriteProducts = async (req, res, next) => {
 
         const user = req?.user;
 
-        const favorites  = await Favorite.find({user: user?.id}).populate('user').populate("product");
+        const favorites  = await Favorite.find({user: user?.id}).populate({
+            path:"user",
+            select:"-password -email -role"
+        }).populate(
+            {
+                path:'product',
+                select: "-isStock -isFeature -minStock -sellQuantity -publish_date -createdAt"
+            }
+        );
         if(!favorites) throw createError(404, "Favorite not added");
         return successResponse(res, {
             message: "Success",
