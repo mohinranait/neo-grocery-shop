@@ -255,11 +255,12 @@ const resetPassword = async (req, res, next) => {
  * @api {post} /user/logout Logout user
  */ 
 const logoutUser = async (req, res, next) => {
+
+ // Clear cookie and send response
     try {
-        // Clear cookie and send response
-        res.clearCookie('access_token').status(200).json({
-            message: "User logout",
-            success: true,
+        res.clearCookie("access_token", {maxAge:0}).send({
+            success : true,
+            message : "User logout"
         })
     } catch (error) {
         next(error)
