@@ -151,10 +151,6 @@ const loginUser = async (req, res,next) => {
 
         // send response 
         res.cookie("access_token", token, {
-            //    httpOnly: true,
-            // secure: true,
-            // samesite: "none",
-
             httpOnly: true,
             secure: true,
             sameSite:  'none',
@@ -259,17 +255,23 @@ const resetPassword = async (req, res, next) => {
  * @api {post} /user/logout Logout user
  */ 
 const logoutUser = async (req, res, next) => {
-
- // Clear cookie and send response
     try {
-        res.clearCookie("access_token", {maxAge:0}).send({
-            success : true,
-            message : "User logout"
-        })
+        // Clear the access_token cookie
+        res.clearCookie("access_token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none', 
+        });
+
+        // Send response
+        return res.status(200).send({
+            success: true,
+            message: "User logged out successfully",
+        });
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
 
 module.exports = {
     registerNewUser,
