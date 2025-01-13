@@ -13,7 +13,7 @@ userRoute.post('/user', verifyRegisterProcess)
 // Login user by email and password
 userRoute.post('/user/login', loginUser)
 // Logout user
-userRoute.post('/user/logout', isAuth, logoutUser)
+userRoute.post('/user/logout',  logoutUser)
 userRoute.post('/forgot-password', forgotPassword)
 userRoute.post('/reset-password', resetPassword)
 

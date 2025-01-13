@@ -156,8 +156,12 @@ const loginUser = async (req, res,next) => {
             // samesite: "none",
 
             httpOnly: true,
-            secure: productionMode == 'production',
-            sameSite: productionMode == 'production' ? 'none' : 'strict'
+            secure: true,
+            sameSite:  'none',
+
+            // httpOnly: true,
+            // secure: productionMode == 'production',
+            // sameSite: productionMode == 'production' ? 'none' : 'strict'
         })
       
         return successResponse(res, {
