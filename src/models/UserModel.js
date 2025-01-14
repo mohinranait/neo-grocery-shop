@@ -33,8 +33,7 @@ const userSchema = new Schema({
         trim:true,
     },
     profile:{
-        type: Types.ObjectId ,
-        ref: "Media"
+        type : String,
     },
     role:{
         type: String,

@@ -13,12 +13,10 @@ const brandSchema = new Schema({
     },
 
     brandBanner: {
-        type: Types.ObjectId,
-        ref:"Media",
+        type: String,
     },
     brandThumbnail: {
-        type: Types.ObjectId,
-        ref:"Media",
+        type: String,
     },
    status: {
         type: String,

@@ -16,12 +16,10 @@ const categorySchema = new Schema({
         default: null,
     },
     catBanner: {
-        type: Types.ObjectId,
-        ref:"Media",
+        type: String,
     },
     catThumbnail: {
-        type: Types.ObjectId,
-        ref:"Media",
+        type: String,
     },
     catIcon: {
         type: String
