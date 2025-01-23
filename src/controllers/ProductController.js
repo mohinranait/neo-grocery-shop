@@ -27,38 +27,128 @@ const createNewProduct = async (req, res, next) => {
 }
 
 /**
- * @api {get} /products?accessBy=user -> get all products
- * @query {accessBy=[user, admin,manager]}
+ * @api {get} /products?accessBy=User -> get all products
+ * @query {accessBy=[User, Admin,Manager]}
 */
 const getAllProducts = async (req, res , next) => {
     try {
+
+      
+      
+
         // Find all querys
-        const accessBy = req.query?.accessBy;
+        const accessBy = req.query?.accessBy || "User";
+        const status = req.query?.status || ''; 
         const search = req.query?.search || '';
+        const page = parseInt(req.query?.page) || 1;
+        const limit = parseInt(req.query?.limit) || 10;
+        let sorting = req.query?.sort || 'asc'; // asc, desc
+        const sortField = req.query?.sortField || 'name';
+        const requestSell = req.query?.request; // Top Sell , Offers
+        const features = req.query?.features; 
+       
+        const firstDate = req.query?.firstDate ? new Date(req.query.firstDate) : null;
+        const lastDate = req.query?.lastDate ? new Date(req.query.lastDate) : null;
+
+        const searchText = new RegExp('.*'+search+'.*','i')
+
+
 
         let query = {
             status: "Active"
         }
 
-        const searchText = new RegExp('.*'+search+'.*','i')
+         
 
+        // Sorting products by asc OR desc
+        sorting === "asc" ? 1 : -1;
+       
+
+       // Search Product
         if(search){
             query.$or = [
-                { name: {$reg: searchText } },
-                { slug: {$reg: searchText } }
+                { name: {$regex : searchText } },
+                { slug: {$regex : searchText } },
+                { skuCode: {$regex : searchText } }
             ]
         }
 
-        if(accessBy === 'Admin' || accessBy === 'Manager'){
-            query.status = {
-                $in: ['Active',"Inactive"]
+        // features product
+        if(requestSell){
+            if(requestSell === 'isFeature'){
+                query.isFeature = 'Active'
+            }else if(requestSell === 'Offers'){
+                // TODO This logic is comming soon
+                // query['price.discountPrice'] = { $gt : 0}
             }
         }
-        const products = await Product.find(query);
+        
+
+        // features product
+        if(features){
+            if(features === 'All'){
+                query.features = {
+                    $in: ['Active',"Inactive"]
+                }
+            }
+            else{
+               query.features = features
+            }
+        }
+
+       
+        // Date wish
+        if (firstDate && lastDate) {
+            query.createdAt = {
+                $gte: firstDate,
+                $lte: lastDate,
+            };
+        } else if (firstDate) {
+            const nextDay = new Date(firstDate);
+            nextDay.setDate(nextDay.getDate() + 1); 
+            query.createdAt = {
+                $gte: firstDate,
+                $lt: nextDay, 
+            };
+        }
+       
+        
+
+        // Access Products
+        if(accessBy === 'Admin' || accessBy === 'Manager'){
+            if(!status || status == 'All'){
+                query.status = {
+                    $in: ['Active',"Inactive"]
+                }
+            }else{
+                query.status = status;
+                
+            }
+           
+        }else{
+            // User can access only Active Products
+            query.status = 'Active'
+        }
+
+        console.log({query});
+        
+
+        const products = await Product.find(query)
+        .skip((page-1)*limit)
+        .limit(limit)
+        .sort({[sortField]: sorting });
+        const total = await Product.find(query)
+        .skip((page-1)*limit)
+        .sort({[sortField]: sorting }).countDocuments();
+    
         return successResponse(res, {
             message: "Success",
             statusCode:200,
-            payload: products,
+            payload: {
+                products,
+                limit,
+                total,
+            },
         })
     } catch (error) {
         next(error);

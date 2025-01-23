@@ -7,12 +7,10 @@ const productSchema = new Schema({
         required:true,
     },
     brand : {
-        type : Types.ObjectId,
-        ref: "Brand",
+        type: [String]
     },
     category : {
-        type : Types.ObjectId,
-        ref: "Category",
+        type : [String],
     },
    
     details: { type : String},
@@ -22,7 +20,7 @@ const productSchema = new Schema({
         type: Number,
         default: 10,
     },
-    isFeature : {
+    features : {
         type : String,
         default:'Inactive',
         enum: ['Active', 'Inactive']
@@ -43,7 +41,7 @@ const productSchema = new Schema({
         default: 5
     },
     featureImage : {
-        images : [String],
+        image : {type:String},
         videoUrl : {type:String}
     },
     imageGallary:{
@@ -113,7 +111,40 @@ const productSchema = new Schema({
                 value: {type:String},
             }
         ],
-    }
+    },
+    variant: {
+        type: String,
+        default: "Single Product",
+        enum:["Single Product" , "Variable Product" , "Group Product" , "Affiliate"]
+    },
+    manageStock: {
+        type: Boolean,
+        default: false
+    },
+    shipping:{
+        weight: {
+            type: Number,
+            default: 0
+        },
+        
+        length: {
+            type: Number,
+            default: 0
+        },
+        width: {
+            type: Number,
+            default: 0
+        },
+        height: {
+            type: Number,
+            default: 0
+        }
+    },
+    seo_title: String,
+    seo_desc:String,
+    seo_keyword:{
+        type: [String]
+    },
 },{timestamps:true})
 
 

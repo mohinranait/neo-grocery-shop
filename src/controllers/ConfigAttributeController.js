@@ -31,7 +31,8 @@ const createNewConfigAttribute = async (req, res, next) => {
 */
 const getAllConfigAttributes = async (req, res, next) => {
     try {
-        const configAttributes = await ConfigAttribute.find().populate("attribute");
+        const attributeId = req?.params?.attrId;
+        const configAttributes = await ConfigAttribute.find({attribute:attributeId}).populate("attribute");
         if(!configAttributes) throw createError(404, "ConfigAttributes not-found");
         return successResponse(res, {
             message: "Success",
