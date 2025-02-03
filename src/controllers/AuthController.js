@@ -28,6 +28,11 @@ const registerNewUser = async (req, res,next) => {
        const isExists = await User.findOne({email});
        if(isExists)  throw createError(409, "This email already exists");
        
+
+       
+        // Generate randor number for email verify
+        const randomNumber = Math.random();
+        const getFourDigit = randomNumber?.toString().slice(2,6) || '9258'
        
         // Create token from register data
         const token = await createJwtToken( {
@@ -35,8 +40,12 @@ const registerNewUser = async (req, res,next) => {
             lastName,
             email,
             password,
+            code: getFourDigit
 
         }, JWT_REGISTER_SECRET, '30m')
+
+
+
 
         // Formate email template
         const emailData = {
@@ -45,8 +54,9 @@ const registerNewUser = async (req, res,next) => {
             text: "Hello world",
             html: `
             <h2>Hello ${firstName} </h2>
-            <p> <a href='${CLIENT_URL}/verify/${token}'>Click here for verify your account</a> </p>
+            <p> Verify Number: <strong>${getFourDigit}</strong> <p>
             `
+            // <p> <a href='${CLIENT_URL}/verify/${token}'>Click here for verify your account</a> </p>
         }
 
         try {
@@ -75,9 +85,16 @@ const registerNewUser = async (req, res,next) => {
 const verifyRegisterProcess = async (req, res, next) => {
     try {
         const token = req.body?.token;
+        const userCode = req.body?.code;
         if(!token) throw createError(401, "Token not found");
 
         const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
+        const tokenCode = decoded?.code;
+
+        if(tokenCode !== userCode) throw createError(404,"Invalid token")
+
+        const existsUser = await User.findOne({email:decoded?.email});
+        if(existsUser?.email) throw createError(409,"This user already verifyed")
         
         const userData = {
             name: {

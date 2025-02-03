@@ -121,6 +121,15 @@ const productSchema = new Schema({
         type: Boolean,
         default: false
     },
+    attributes:[
+        {
+            attribute: {
+                type: Types.ObjectId,
+                ref:"Attribute"
+            },
+            attributeConfig: [String],
+        }
+    ],
     shipping:{
         weight: {
             type: Number,
