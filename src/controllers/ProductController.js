@@ -11,7 +11,7 @@ const createNewProduct = async (req, res, next) => {
         const authUser = req.user;
         if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
 
-        const body = req?.body;
+        const body = req?.body;        
         const genSlug = generateSlug(body?.slug || body?.name);
 
         const product = await Product.create({...body, slug: genSlug, author: authUser?.id })
