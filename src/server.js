@@ -6,7 +6,8 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { errorResponse } = require('./utils/responseHandler');
 const { connectMongodbDatabase } = require('./config/connectDb');
-const { userRoute, categoryRoute, attributeRoute, configAttrRoute, brandRoute, productRoute, uploadImageRouter, favoriteRoute, shoppingCartRoute } = require('./routes');
+const { userRoute, categoryRoute, attributeRoute, configAttrRoute, brandRoute, productRoute, uploadImageRouter, favoriteRoute, shoppingCartRoute, orderRouter } = require('./routes');
+
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api', productRoute);
 app.use('/api', uploadImageRouter);
 app.use("/api", favoriteRoute)
 app.use("/api", shoppingCartRoute)
+app.use('/api', orderRouter)
 
 
 // Default route
