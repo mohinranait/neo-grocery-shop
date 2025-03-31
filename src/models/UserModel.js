@@ -53,7 +53,7 @@ const userSchema = new Schema({
         default:'Male'  ,
         enum : ['Male','Female','Other'],
     }
-});
+},{timestamps:true});
 
 const User = model("User", userSchema);
 

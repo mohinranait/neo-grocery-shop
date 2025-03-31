@@ -61,7 +61,7 @@ const updateUserById = async (req, res, next) => {
         const userId = req.params?.userId;
         let body = req.body;
 
-        const {accessBy} = req.query;
+        const accessBy = req.query?.accessBy || 'User';
         if(!accessBy) throw createError(400, "Access query is required");
 
         // Check user exists
@@ -80,13 +80,13 @@ const updateUserById = async (req, res, next) => {
             const user = await User.findByIdAndUpdate(findUser?._id, body, {new:true, runValidators:true}).select('-password');
             if(!user) throw createError(404, "User not-found");
             return successResponse(res, {
-                message: "Successfully updated your profile",
+                message: "Successfully updated profile",
                 payload:user,
                 statusCode:200
             })
         }
 
-        if(role === 'Manager' && accessBy === 'manager'){
+        if(role === 'Manager' && accessBy === 'Manager'){
             // Manager can update user information
             if( findUser.role !== "User") throw createError(401, "Unauthorized access");
             const user = await User.findByIdAndUpdate(findUser?._id, body, {new:true, runValidators:true}).select('-password');
@@ -97,7 +97,7 @@ const updateUserById = async (req, res, next) => {
             })
         }
 
-        if(role === 'Admin' && accessBy === 'admin'){
+        if(role === 'Admin' && accessBy === 'Admin'){
             // Admin can update user information and manager information
             const user = await User.findByIdAndUpdate(findUser?._id, body, {new:true, runValidators:true}).select('-password');
             return successResponse(res, {
