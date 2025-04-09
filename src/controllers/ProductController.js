@@ -1,6 +1,7 @@
 const Product = require("../models/ProductModel");
 const { generateSlug } = require("../utils/helpers");
 const { successResponse } = require("../utils/responseHandler");
+const createError = require("http-errors");
 
 /**
  * @api {post} /product -> Create new product method

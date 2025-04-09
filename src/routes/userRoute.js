@@ -1,7 +1,7 @@
 const userRoute = require("express").Router();
 const { isAuth } = require("../middleware/isAuth");
 const {   findUserById, getAuthenticatedUser, getAllUsers, updateUserById, } = require("../controllers/UserController");
-const { registerNewUser, verifyRegisterProcess, loginUser, logoutUser, forgotPassword, resetPassword } = require("../controllers/AuthController");
+const { registerNewUser, verifyRegisterProcess, loginUser, logoutUser, forgotPassword, resetPassword,chnagePassword } = require("../controllers/AuthController");
 
 /**
  * User routes for Authentication
@@ -16,6 +16,7 @@ userRoute.post('/user/login', loginUser)
 userRoute.post('/user/logout',  logoutUser)
 userRoute.post('/forgot-password', forgotPassword)
 userRoute.post('/reset-password', resetPassword)
+userRoute.patch('/change-password',isAuth, chnagePassword)
 
 
 /**

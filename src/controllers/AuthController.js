@@ -8,6 +8,7 @@ const createError = require("http-errors");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { jwtSecret, CLIENT_URL, productionMode,JWT_REGISTER_SECRET } = require("../accessEnv");
+const { generatePasswordHash } = require("../utils/helpers");
 
 /**
  * @api {post} /user/create Register new user
@@ -268,6 +269,37 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
+// Change password
+const chnagePassword = async (req, res, next) => {
+    try {
+ 
+        const {password,userId} = req.body || {};
+        if(!password) throw createError(401, "Password is required");
+        if(!userId) throw createError(401, "User is required");
+
+        // Hash password
+        const hashPassword = await generatePasswordHash(password)
+        
+        // Update password
+        let user =  await User.findByIdAndUpdate(userId, {password: hashPassword}, {new:true,runValidators:true})
+        if(!user) throw createError(404, "User not exists")
+
+        // convert to plain object and remove password
+        user = user.toObject()
+        delete user.password;
+
+        // Send response
+        return successResponse(res, {
+            message:"Success",
+            statusCode:200,
+            payload: {}
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 /**
  * @api {post} /user/logout Logout user
  */ 
@@ -297,5 +329,5 @@ module.exports = {
     logoutUser,
     forgotPassword,
     resetPassword,
-   
+    chnagePassword
 }

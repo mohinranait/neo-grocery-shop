@@ -1,6 +1,6 @@
 const { Order } = require("../models/OrderModel");
 const { successResponse } = require("../utils/responseHandler") ;
-
+const createError = require("http-errors");
 
 // Store new order in your datebase
 const createNewOrder = async (req, res, next) => {
@@ -65,9 +65,33 @@ const getOrderByUID = async (req, res, next) => {
     }
 }
 
+/**
+ * @api {pathc} /api/order/:id 
+ * Update Order by ID
+*/
+const updateOrderById = async (req, res, next) => {
+    try {
+        const id = req.params?.id;
+        const authUser = req.user;
+        if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
+
+        const order = await Order.findByIdAndUpdate(id, {...req.body}, {runValidators:true, new:true})
+        if(!order) throw createError(500, "Order not found");
+        return successResponse(res, {
+            message: "Order has been updated",
+            payload:order,
+            statusCode:200
+        })  
+
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
 
 module.exports = {
     createNewOrder,
     getAllOrders,
-    getOrderByUID
+    getOrderByUID,
+    updateOrderById
 }
