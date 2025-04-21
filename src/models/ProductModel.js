@@ -185,6 +185,11 @@ const productSchema = new Schema(
     seo_keyword: {
       type: [String],
     },
+    freeShipping:{
+      type:String,
+      default:"no",
+      enum:['yes','no']
+    }
   },
   { timestamps: true }
 );
