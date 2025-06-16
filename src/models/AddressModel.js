@@ -1,0 +1,20 @@
+const { Schema, Types, model } = require("mongoose");
+
+// Address Schema 
+const addressSchema = new Schema({
+    userId: {
+        type : Types.ObjectId,
+        ref: "User",
+        required:true,
+    },
+    firstName: { type: String },
+    lastName: { type: String },
+    phone: { type: String },
+    address: { type: String },
+    city: { type: String },
+    postalCode: { type: String },
+},{timestamps:true})
+
+const Address = model('Address', addressSchema);
+
+module.exports =  Address;

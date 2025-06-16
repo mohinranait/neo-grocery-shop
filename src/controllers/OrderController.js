@@ -1,4 +1,5 @@
-const { Order } = require("../models/OrderModel");
+
+const Order = require("../models/OrderModel");
 const { successResponse } = require("../utils/responseHandler") ;
 const createError = require("http-errors");
 
@@ -23,9 +24,10 @@ const createNewOrder = async (req, res, next) => {
 // Get all orders
 const getAllOrders = async (req, res, next) => {
     try {
-        // Admin or User
+        // Access order for Admin or User
         const accessByUser = req.query?.userId || null;
     
+        // DB Query
         const query= {}
 
         // If request from user
@@ -33,7 +35,7 @@ const getAllOrders = async (req, res, next) => {
             query.userId = accessByUser;
         }
        
-        // Connect DB
+        // Filter from DB
         const orders = await Order.find(query);
         return successResponse(res, {
             message: "Success",

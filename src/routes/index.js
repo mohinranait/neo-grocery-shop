@@ -1,3 +1,4 @@
+const addressRoute = require("./addressRoute");
 const attributeRoute = require("./attributeRoute");
 const brandRoute = require("./brandRoute");
 const categoryRoute = require("./categoryRoute");
@@ -20,5 +21,6 @@ module.exports =
     uploadImageRouter,
     favoriteRoute,
     shoppingCartRoute,
-    orderRouter
+    orderRouter,
+    addressRoute,
 }

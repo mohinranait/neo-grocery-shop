@@ -11,19 +11,7 @@ const OrderItemSchema = new Schema({
   image: {type:String} ,
 });
 
-// Address Schema 
-const addressSchema = new Schema({
-    userId: {
-        type : Types.ObjectId,
-        ref: "User",
-        required:true,
-    },
-    firstName: { type: String },
-    lastName: { type: String },
-    address: { type: String },
-    city: { type: String },
-    postalCode: { type: String },
-})
+
 
 // Main Order Schema
 const OrderSchema = new Schema(
@@ -39,6 +27,7 @@ const OrderSchema = new Schema(
     shippingAddress: {
         firstName: { type: String, required: function () { return !this.userId; } },
         lastName: { type: String, required: function () { return !this.userId; } },
+        phone: { type: String, required: function () { return !this.userId; } },
         address: { type: String, required: function () { return !this.userId; } },
         city: { type: String, required: function () { return !this.userId; } },
         postalCode: { type: String, required: function () { return !this.userId; } },
@@ -69,9 +58,8 @@ const OrderSchema = new Schema(
   { timestamps: true }
 );
 
-const Address = model('Address', addressSchema)
+
 const Order = model("Order", OrderSchema);
 
-module.exports = {
-  Address, Order
-}
+module.exports = Order;
+
