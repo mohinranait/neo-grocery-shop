@@ -6,7 +6,14 @@ const createError = require("http-errors");
 // Store new order in your datebase
 const createNewOrder = async (req, res, next) => {
     try {
-        const {userId} = req.body;
+        const {userId,shippingAddressId,items} = req.body;
+        if(userId.trim() && !shippingAddressId){
+            throw createError(500, "Shipping Address is required")
+        }
+
+        // Validation order items
+        if(items?.length === 0) throw createError(500, "Your shopping cart is empty")
+
         const body = req.body;
        
         // Connect DB

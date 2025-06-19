@@ -63,7 +63,7 @@ const updateAddressByUserId = async (req, res, next) => {
          const checkOwnerAddress = await Address.findById(addressId);
         
          
-         if(authUser?.id !== checkOwnerAddress?.userId ) throw createError(401, "You are not authorized to edit this address");
+         if(authUser?.id !== checkOwnerAddress?.userId?.toString() ) throw createError(401, "You are not authorized to edit this address");
 
         const body = req.body;
         const address = await Address.findByIdAndUpdate(addressId, {...body}, { new:true, runValidators:true });

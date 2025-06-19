@@ -13,6 +13,11 @@ const addressSchema = new Schema({
     address: { type: String },
     city: { type: String },
     postalCode: { type: String },
+    type: {
+        type: String,
+        enum: ['Home',"Office","Others"],
+        default:'Home'
+    }
 },{timestamps:true})
 
 const Address = model('Address', addressSchema);
