@@ -7,7 +7,7 @@ const createError = require("http-errors");
 const createNewOrder = async (req, res, next) => {
     try {
         const {userId,shippingAddressId,items} = req.body;
-        if(userId.trim() && !shippingAddressId){
+        if(userId && !shippingAddressId){
             throw createError(500, "Shipping Address is required")
         }
 
@@ -32,22 +32,23 @@ const createNewOrder = async (req, res, next) => {
 const getAllOrders = async (req, res, next) => {
     try {
         // Access order for Admin or User
-        const accessByUser = req.query?.userId || null;
+        // const accessByUser = req.query?.userId || null;
+        const authUser = req.user;
     
         // DB Query
         const query= {}
 
         // If request from user
-        if(accessByUser){
-            query.userId = accessByUser;
+        if(authUser.role === 'User' ){
+            query.userId = authUser?._id;
         }
        
         // Filter from DB
-        const orders = await Order.find(query);
+        const orders = await Order.find(query).populate('shippingAddressId');
         return successResponse(res, {
             message: "Success",
             statusCode:200,
-            payload: orders,
+            payload: {orders},
         })
     } catch (error) {
         next(error)

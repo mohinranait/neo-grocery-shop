@@ -9,6 +9,14 @@ const OrderItemSchema = new Schema({
   sku: {type:String} ,
   name: {type:String} ,
   image: {type:String} ,
+  shippingCharge:{
+    type: Number,
+    default: 0
+  },
+  tax: {
+    type: Number,
+    default: 0
+  }
 });
 
 

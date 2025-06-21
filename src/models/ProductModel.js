@@ -158,6 +158,14 @@ const productSchema = new Schema(
         attributeConfig: [String],
       },
     ],
+    shippingCharge:{
+      type: Number,
+      default: 0,
+    },
+    tax:{
+      type: Number,
+      default: 0,
+    },
     shipping: {
       weight: {
         type: Number,
