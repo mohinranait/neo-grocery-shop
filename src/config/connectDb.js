@@ -4,7 +4,7 @@ const { DATABASE } = require("../accessEnv");
 /**
  * Connect to MongoDB database
 */
-const connectMongodbDatabase = async () => {
+const connectMongodbDatabase = async (req, res, next) => {
     try {
         await mongoose.connect(DATABASE)
         console.log("Connect Database");

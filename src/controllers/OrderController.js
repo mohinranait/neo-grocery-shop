@@ -85,7 +85,7 @@ const updateOrderById = async (req, res, next) => {
         const authUser = req.user;
         if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
 
-        const order = await Order.findByIdAndUpdate(id, {...req.body}, {runValidators:true, new:true})
+        const order = await Order.findByIdAndUpdate(id, {...req.body}, {runValidators:true, new:true}).populate('shippingAddressId');
         if(!order) throw createError(500, "Order not found");
         return successResponse(res, {
             message: "Order has been updated",

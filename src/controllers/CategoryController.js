@@ -2,17 +2,38 @@ const Category = require("../models/CategoryModel");
 const createError = require("http-errors");
 const { generateSlug } = require("../utils/helpers");
 const { successResponse } = require("../utils/responseHandler");
+const Product = require("../models/ProductModel");
 /**
  * @api {get} /categories Get all categories
 */
 const getAllCategories = async (req, res, next) => {
     try {
+        
+        // Step 1: Get all categories
         const categories = await Category.find();
-        if(!categories) throw createError(404, "Categories not-found");
+
+        // Step 2: Aggregate product counts per category
+        const categoryCounts = await Product.aggregate([
+        { $unwind: "$category" },
+        { $group: { _id: "$category", count: { $sum: 1 } } }
+        ]);
+
+        // Step 3: Convert count array to object for easy lookup
+        const countMap = categoryCounts.reduce((acc, curr) => {
+        acc[curr._id] = curr.count;
+        return acc;
+        }, {} );
+
+        // Step 4: Merge category data with product count
+        const categoriesWithCounts = categories.map((category) => ({
+        ...category.toObject(),
+        productCount: countMap[category._id.toString()] || 0,
+        }));
+
 
         return successResponse(res, {
             message: "Success",
-            payload:categories,
+            payload:categoriesWithCounts,
             statusCode:200
         })
     } catch (error) {
