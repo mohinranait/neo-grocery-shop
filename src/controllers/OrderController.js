@@ -44,7 +44,7 @@ const getAllOrders = async (req, res, next) => {
         }
        
         // Filter from DB
-        const orders = await Order.find(query).populate('shippingAddressId');
+        const orders = await Order.find(query).populate('shippingAddressId').sort({createdAt:-1});
         return successResponse(res, {
             message: "Success",
             statusCode:200,
