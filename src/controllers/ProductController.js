@@ -200,7 +200,9 @@ const updateProductByID = async (req, res, next) => {
         if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
         const productId = req.params?.id;
         const body = req?.body;
-        const product = await Product.findByIdAndUpdate(productId, body, {new:true, runValidators:true});
+        console.log({body});
+        
+        const product = await Product.findByIdAndUpdate(productId, {...body}, {new:true, runValidators:true});
         if(!product) throw createError(500, "Product not updated");
         return successResponse(res, {
             message: "Product has been updated",

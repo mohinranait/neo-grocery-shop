@@ -33,15 +33,15 @@ const getAllOrders = async (req, res, next) => {
     try {
         // Access order for Admin or User
         // const accessByUser = req.query?.userId || null;
-        const authUser = req.user;
+        const authUser = req.user;        
     
         // DB Query
         const query= {}
 
         // If request from user
         if(authUser.role === 'User' ){
-            query.userId = authUser?._id;
-        }
+            query.userId = authUser?.id;
+        }        
        
         // Filter from DB
         const orders = await Order.find(query).populate('shippingAddressId').sort({createdAt:-1});

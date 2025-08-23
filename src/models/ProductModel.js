@@ -41,6 +41,7 @@ const productSchema = new Schema(
     skuCode: { type: String, },
     short_details: { type: String,},
     status: { type: String,  default: "Active",enum: ["Active", "Inactive"], },
+    productShortDesc : { type: String, },
     productFeatures: {
       extraFeatures: [
         {
