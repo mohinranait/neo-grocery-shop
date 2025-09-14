@@ -1,6 +1,7 @@
 const createError = require("http-errors");
 const { successResponse } = require("../utils/responseHandler");
 const User = require("../models/UserModel");
+const Order = require("../models/OrderModel");
 
 
 
@@ -148,12 +149,47 @@ const getAllUsers = async (req, res, next) => {
     }
 }
 
+// get user statics
+const getUsersStatics = async (req, res, next) => {
+    try {
+        const user = req.user;
 
+        const orderQuery= {
+            userId: user?.id,
+        }
+        const orders = await Order.find({orderQuery});
+        const totalOrders = orders?.length;
+        const totalCost = orders?.reduce((acc, cur) => cur.totalAmount + acc, 0 );
+        const pendingOrders = orders?.filter(order => order.status === 'Pending')
+        const processingOrders = orders?.filter(order => order.status === 'Processing')
+        const deliveredOrders = orders?.filter(order => order.status === 'Delivered')
+        const shippedOrders = orders?.filter(order => order.status === 'Shipped')
+        const cancelledOrders = orders?.filter(order => order.status === 'Cancelled')
+
+        return successResponse(res,  {
+            message: "success",
+            statusCode: 200,
+            payload: {
+                totalCost,
+                totalOrders,
+                pendingOrders,
+                processingOrders,
+                deliveredOrders,
+                shippedOrders,
+                cancelledOrders
+            }
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 module.exports = {
     findUserById,
     updateUserById,
     getAllUsers,
-    getAuthenticatedUser
+    getAuthenticatedUser,
+    getUsersStatics
 }

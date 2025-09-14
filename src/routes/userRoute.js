@@ -1,6 +1,6 @@
 const userRoute = require("express").Router();
 const { isAuth } = require("../middleware/isAuth");
-const {   findUserById, getAuthenticatedUser, getAllUsers, updateUserById, } = require("../controllers/UserController");
+const {   findUserById, getAuthenticatedUser, getAllUsers, updateUserById, getUsersStatics, } = require("../controllers/UserController");
 const { registerNewUser, verifyRegisterProcess, loginUser, logoutUser, forgotPassword, resetPassword,chnagePassword } = require("../controllers/AuthController");
 
 /**
@@ -30,5 +30,7 @@ userRoute.patch('/user/:userId', isAuth, updateUserById)
 userRoute.get('/users', isAuth, getAllUsers)
 // Get authenticated user
 userRoute.get('/user', isAuth, getAuthenticatedUser)
+
+userRoute.get('/statics', isAuth, getUsersStatics )
 
 module.exports = userRoute;

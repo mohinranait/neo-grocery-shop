@@ -33,10 +33,6 @@ const createNewProduct = async (req, res, next) => {
 */
 const getAllProducts = async (req, res , next) => {
     try {
-
-      
-      
-
         // Find all querys
         const accessBy = req.query?.accessBy || "User";
         const status = req.query?.status || ''; 
@@ -54,15 +50,13 @@ const getAllProducts = async (req, res , next) => {
         const searchText = new RegExp('.*'+search+'.*','i')
 
 
-
         let query = {
             status: "Active"
         }
-
          
 
         // Sorting products by asc OR desc
-        sorting === "asc" ? 1 : -1;
+        sorting = sorting === "asc" ? 1 : -1;
        
 
        // Search Product
@@ -112,8 +106,6 @@ const getAllProducts = async (req, res , next) => {
                 $lt: nextDay, 
             };
         }
-       
-        
 
         // Access Products
         if(accessBy === 'Admin' || accessBy === 'Manager'){
@@ -123,21 +115,58 @@ const getAllProducts = async (req, res , next) => {
                 }
             }else{
                 query.status = status;
-                
             }
-           
         }else{
             // User can access only Active Products
             query.status = 'Active'
         }
+       
+        const products = await Product.aggregate([
+            { $match: query },
+            { $sort: { [sortField]: sorting } },
+            { $skip: (page-1) * limit },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: 'comments',
+                    let : {pid: "$_id"},
+                    pipeline: [
+                            { $match: { $expr : { $eq : ["$productId", "$$pid" ] }, isApproved: true } },
+                            {
+                                $group: {
+                                    _id: null,
+                                    totalComments: {$sum: 1},
+                                    avgRating: { $avg : "$rating"}
+                                }
+                            }
+                    ],
+                   as : "commentStats"
+                }
+            },
+            {
+                $addFields: {
+                    totalComments: { $ifNull: [ { $first : "$commentStats.totalComments" },0] },
+                    avgRating: { $ifNull: [ { $first: "$commentStats.avgRating" },0 ] }
+                }
+            },
+            {
+                $project: {
+                    seo_title: 0,
+                    seo_desc: 0,
+                    seo_keyword: 0,
+                    short_details: 0,
+                    productShortDesc: 0,
+                    details: 0,
+                    productFeatures: 0,
+                    attributes: 0,
+                    returnTime: 0,
+                    shipping: 0,
+                    manageStock: 0,
+                    commentStats: 0
+                }
+            }
+        ])
 
-        console.log({query});
-        
-
-        const products = await Product.find(query)
-        .skip((page-1)*limit)
-        .limit(limit)
-        .sort({[sortField]: sorting });
         const total = await Product.find(query)
         .skip((page-1)*limit)
         .sort({[sortField]: sorting }).countDocuments();
@@ -200,7 +229,7 @@ const updateProductByID = async (req, res, next) => {
         if((authUser.role !== 'Admin') && (authUser.role !== 'Manager') ) throw createError(401, "Unauthorized access");
         const productId = req.params?.id;
         const body = req?.body;
-        console.log({body});
+    
         
         const product = await Product.findByIdAndUpdate(productId, {...body}, {new:true, runValidators:true});
         if(!product) throw createError(500, "Product not updated");

@@ -62,8 +62,7 @@ const getOrderByUID = async (req, res, next) => {
 
        
         // Connect DB
-        const order = await Order.findOne({uid:orderUid});
-        console.log({order});
+        const order = await Order.findOne({uid:orderUid}).populate("shippingAddressId");
         
         return successResponse(res, {
             message: "Success",
