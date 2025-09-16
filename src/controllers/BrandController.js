@@ -5,10 +5,61 @@ const { generateSlug } = require("../utils/helpers");
 
 /**
  * @api {get} /brands Get all brands
+ * AccessBy=[user, admin,manager]
 */
 const getAllBrands = async (req, res, next) => {
     try {
-        const brands = await Brand.find();
+        // const brands = await Brand.find();
+        const accessBy = req.query.accessBy || 'user';
+        const limit  = req.query.limit || 1000;
+        const query = {};
+
+        if(accessBy === 'user'){
+            query.status = "Active"
+        }
+
+        const brands = await Brand.aggregate([
+            {
+                $match: query,
+            },
+            {
+                $lookup: {
+                    from:"products",
+                    let: {brandId: "$_id"},
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { 
+                                    $in :[
+                                        "$$brandId", {
+                                            $map: {
+                                                input: "$brand",
+                                                as : "c",
+                                                in: { $toObjectId: "$$c" }
+                                            }
+                                        } 
+                                    ] 
+                                }
+                            }
+                        }
+                    ],
+                    as: "brands"
+                }
+            },
+            {
+                $addFields: {
+                    totalProduct: { $size: "$brands" }
+                }
+            },
+            { $sort: {createdAt: -1} },
+            { $limit: limit},
+            {
+                $project: {
+                    brands: 0,
+                }
+            }
+        ])
+
         if(!brands) throw createError(404, "Brands not-found");
         return successResponse(res, {
             message: "Success",

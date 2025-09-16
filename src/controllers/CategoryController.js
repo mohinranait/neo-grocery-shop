@@ -2,38 +2,59 @@ const Category = require("../models/CategoryModel");
 const createError = require("http-errors");
 const { generateSlug } = require("../utils/helpers");
 const { successResponse } = require("../utils/responseHandler");
-const Product = require("../models/ProductModel");
 /**
  * @api {get} /categories Get all categories
+ * Request accessBy=[user, admin]
 */
 const getAllCategories = async (req, res, next) => {
     try {
         
-        // Step 1: Get all categories
-        const categories = await Category.find();
+        const accessBy = req.query?.accessBy || 'user';
+        const limit = req.query.limit || 1000 ;
 
-        // Step 2: Aggregate product counts per category
-        const categoryCounts = await Product.aggregate([
-        { $unwind: "$category" },
-        { $group: { _id: "$category", count: { $sum: 1 } } }
+       
+        const query= {}
+
+        if(accessBy === 'user' ){
+            query.status = "Active"
+        }
+
+        const categorys = await Category.aggregate([
+            {
+                $match: query,
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    let: { catId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $in: ["$$catId", { $map: { input: "$category", as: "c", in: { $toObjectId: "$$c" } } }] }
+                            }
+                        }
+                    ],
+                    as: "products"
+                }
+            },
+            {
+                $addFields: {
+                    productCount: { $size: "$products" }
+                }
+            },
+            { $sort : { createdAt: -1 } },
+            { $limit: limit },
+            {
+                $project: {
+                    products: 0
+                }
+            }
         ]);
-
-        // Step 3: Convert count array to object for easy lookup
-        const countMap = categoryCounts.reduce((acc, curr) => {
-        acc[curr._id] = curr.count;
-        return acc;
-        }, {} );
-
-        // Step 4: Merge category data with product count
-        const categoriesWithCounts = categories.map((category) => ({
-        ...category.toObject(),
-        productCount: countMap[category._id.toString()] || 0,
-        }));
 
 
         return successResponse(res, {
             message: "Success",
-            payload:categoriesWithCounts,
+            payload:categorys,
             statusCode:200
         })
     } catch (error) {
