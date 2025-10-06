@@ -4,6 +4,7 @@ const brandRoute = require("./brandRoute");
 const categoryRoute = require("./categoryRoute");
 const commentRoute = require("./commentRoute");
 const configAttrRoute = require("./configAttributeRoute");
+const dealRoute = require("./dealRoute");
 const favoriteRoute = require("./favoriteRoute");
 const uploadImageRouter = require("./mediaRoute");
 const orderRouter = require("./orderRoute");
@@ -24,5 +25,6 @@ module.exports =
     shoppingCartRoute,
     orderRouter,
     addressRoute,
-    commentRoute
+    commentRoute,
+    dealRoute,
 }
