@@ -158,7 +158,6 @@ const getAllProducts = async (req, res , next) => {
                     productShortDesc: 0,
                     details: 0,
                     productFeatures: 0,
-                    attributes: 0,
                     returnTime: 0,
                     shipping: 0,
                     manageStock: 0,
