@@ -9,6 +9,7 @@ const favoriteRoute = require("./favoriteRoute");
 const uploadImageRouter = require("./mediaRoute");
 const orderRouter = require("./orderRoute");
 const productRoute = require("./productRoute");
+const sectionRoute = require("./sectionRoute");
 const shoppingCartRoute = require("./shoppingCartRoute");
 const userRoute = require("./userRoute");
 
@@ -27,4 +28,5 @@ module.exports =
     addressRoute,
     commentRoute,
     dealRoute,
+    sectionRoute
 }

@@ -38,7 +38,8 @@ const OrderSchema = new Schema(
         phone: { type: String, required: function () { return !this.userId; } },
         address: { type: String, required: function () { return !this.userId; } },
         city: { type: String, required: function () { return !this.userId; } },
-        postalCode: { type: String, required: function () { return !this.userId; } },
+        subCity: { type: String, required: function () { return !this.userId; } },
+        type: { type: String, required: function () { return !this.userId; } },
     },
     shippingAddressId : {
         type : Types.ObjectId,

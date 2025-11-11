@@ -12,7 +12,7 @@ const addressSchema = new Schema({
     phone: { type: String },
     address: { type: String },
     city: { type: String },
-    postalCode: { type: String },
+    subCity: { type: String },
     type: {
         type: String,
         enum: ['Home',"Office","Others"],

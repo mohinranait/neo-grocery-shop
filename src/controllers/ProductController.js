@@ -155,7 +155,6 @@ const getAllProducts = async (req, res , next) => {
                     seo_desc: 0,
                     seo_keyword: 0,
                     short_details: 0,
-                    productShortDesc: 0,
                     details: 0,
                     productFeatures: 0,
                     returnTime: 0,
