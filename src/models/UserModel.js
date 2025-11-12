@@ -45,8 +45,8 @@ const userSchema = new Schema({
         default:"Active",
         enum: ['Active', 'Pending', 'Banned'],
     },
-    age: {
-        type : Number,
+    dateOfBirth: {
+        type : String,
     },
     gender: {
         type: String,

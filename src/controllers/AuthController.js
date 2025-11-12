@@ -273,13 +273,21 @@ const resetPassword = async (req, res, next) => {
 const chnagePassword = async (req, res, next) => {
     try {
  
-        const {password,userId} = req.body || {};
+        const {password,userId,oldPassword} = req.body || {};
+        const accessBy = req.query?.accessBy || 'admin';
         if(!password) throw createError(401, "Password is required");
         if(!userId) throw createError(401, "User is required");
 
+        if(accessBy === 'user') {
+            // Verify old password
+            const user = await User.findById(userId);
+            if(!user) throw createError(404, "User not found");
+            const matchPass = await bcrypt.compare(oldPassword, user?.password);
+            if(!matchPass) throw createError(401, "Old password is incorrect");
+        }
+
         // Hash password
         const hashPassword = await generatePasswordHash(password)
-        
         // Update password
         let user =  await User.findByIdAndUpdate(userId, {password: hashPassword}, {new:true,runValidators:true})
         if(!user) throw createError(404, "User not exists")

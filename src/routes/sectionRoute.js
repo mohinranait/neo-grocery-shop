@@ -6,7 +6,7 @@ const sectionRoute = require('express').Router();
 
 sectionRoute.post(`/section`, isAuth, createNewSection );
 sectionRoute.patch(`/section/:sectionId`, isAuth, updateSectionBySectionId );
-sectionRoute.get(`/sections`, isAuth, getAllSections );
+sectionRoute.get(`/sections`,  getAllSections );
 sectionRoute.delete(`/section/:sectionId`, isAuth, deleteSectionByUserId );
 
 module.exports = sectionRoute;

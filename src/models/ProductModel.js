@@ -24,6 +24,7 @@ const productSchema = new Schema(
       videoUrl: { type: String }, },
     imageGallery: { type: [String], },
     name: { type: String, trim: true, required: true,},
+    productName: { type: String, trim: true, },
     product_type: { type: String, default: "Physical", enum: ["Physical", "Digital"], },
     price: {
       discountValue: { type: Number, default: 0, },
