@@ -38,7 +38,7 @@ const getAllProducts = async (req, res , next) => {
         const status = req.query?.status || ''; 
         const search = req.query?.search || '';
         const page = parseInt(req.query?.page) || 1;
-        const limit = parseInt(req.query?.limit) || 10;
+        const limit = parseInt(req.query?.limit) || 20;
         let sorting = req.query?.sort || 'asc'; // asc, desc
         const sortField = req.query?.sortField || 'name';
         const requestSell = req.query?.request; // Top Sell , Offers
@@ -82,12 +82,12 @@ const getAllProducts = async (req, res , next) => {
         // features product
         if(features){
             if(features === 'All'){
-                query.features = {
+                query.isFeature = {
                     $in: ['Active',"Inactive"]
                 }
             }
             else{
-               query.features = features
+               query.isFeature = features
             }
         }
 
@@ -165,9 +165,7 @@ const getAllProducts = async (req, res , next) => {
             }
         ])
 
-        const total = await Product.find(query)
-        .skip((page-1)*limit)
-        .sort({[sortField]: sorting }).countDocuments();
+        const total = await Product.find(query).countDocuments();
     
         return successResponse(res, {
             message: "Success",
