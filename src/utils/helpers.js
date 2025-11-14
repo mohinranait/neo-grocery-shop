@@ -28,8 +28,16 @@ const generatePasswordHash = async (password) => {
 }
 
 
+/**
+ * Generate 6 Digit random code for OTP
+*/
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 
 module.exports = {
     generateSlug,
-    generatePasswordHash
+    generatePasswordHash,
+    generateOTP,
 }

@@ -8,7 +8,8 @@ const createError = require("http-errors");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { jwtSecret, CLIENT_URL, productionMode,JWT_REGISTER_SECRET } = require("../accessEnv");
-const { generatePasswordHash } = require("../utils/helpers");
+const { generatePasswordHash, generateOTP } = require("../utils/helpers");
+const { verifyEmailTemplate } = require("../emails/verify-email-template");
 
 /**
  * @api {post} /user/create Register new user
@@ -28,12 +29,10 @@ const registerNewUser = async (req, res,next) => {
        // Duplicate user OR email check
        const isExists = await User.findOne({email});
        if(isExists)  throw createError(409, "This email already exists");
-       
 
-       
-        // Generate randor number for email verify
-        const randomNumber = Math.random();
-        const getFourDigit = randomNumber?.toString().slice(2,6) || '9258'
+
+        // GENERATE 6 DIGIT OTP CODE
+        const otp = generateOTP()
        
         // Create token from register data
         const token = await createJwtToken( {
@@ -41,23 +40,19 @@ const registerNewUser = async (req, res,next) => {
             lastName,
             email,
             password,
-            code: getFourDigit
+            code: otp
 
         }, JWT_REGISTER_SECRET, '30m')
 
 
-
-
+        const fullName = `${firstName} ${lastName}`
         // Formate email template
         const emailData = {
             emails: email,
             subject: "Account verify email",
             text: "Hello world",
-            html: `
-            <h2>Hello ${firstName} </h2>
-            <p> Verify Number: <strong>${getFourDigit}</strong> <p>
-            `
-            // <p> <a href='${CLIENT_URL}/verify/${token}'>Click here for verify your account</a> </p>
+             html: verifyEmailTemplate({fullName, otp, expiry_minutes: 30, company_name: "BrandCollectionBD"})
+         
         }
 
         try {
@@ -70,7 +65,7 @@ const registerNewUser = async (req, res,next) => {
         // Send response
         return successResponse(res, {
             message: `Please check ${email} and verify now `,
-            payload: token,
+            payload: {token,email},
             statusCode:200
         })
 
@@ -92,7 +87,7 @@ const verifyRegisterProcess = async (req, res, next) => {
         const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
         const tokenCode = decoded?.code;
 
-        if(tokenCode !== userCode) throw createError(404,"Invalid token")
+        if(tokenCode !== userCode) throw createError(404,"Invalid your verify request")
 
         const existsUser = await User.findOne({email:decoded?.email});
         if(existsUser?.email) throw createError(409,"This user already verifyed")
@@ -144,7 +139,7 @@ const loginUser = async (req, res,next) => {
         
         // Duplicate user OR email check
         let isExists = await User.findOne({email});
-        if(!isExists)  throw createError(404, "not found");
+        if(!isExists)  throw createError(404, "Email not found in your record");
        
 
         // Match password
@@ -198,20 +193,23 @@ const forgotPassword = async (req, res, next) => {
         const user = await User.findOne({email});
         if(!user) throw createError(404, "User not-found");
 
+        // GENERATE 6 DIGIT OTP CODE
+        const otp = generateOTP()
+
         // Create token from register data
         const token = await createJwtToken( {
             email,
+            otp,
         }, JWT_REGISTER_SECRET, '10m')
 
+
+        const fullName = `${user?.name?.firstName} ${user?.name?.lastName}`
         // Formate email template
         const emailData = {
             emails: email,
             subject: "Reset password",
             text: "Hello world",
-            html: `
-            <h2>Hello ${user?.name?.firstName} ${user?.name?.lastName} </h2>
-            <p> <a href='${CLIENT_URL}/reset-password/${token}'>Click here for reset your password</a> </p>
-            `
+            html: verifyEmailTemplate({fullName, otp, expiry_minutes: 10, company_name: "BrandCollectionBD"})
         }
 
         try { 
@@ -232,25 +230,63 @@ const forgotPassword = async (req, res, next) => {
     }
 }
 
-// Reset password
-const resetPassword = async (req, res, next) => {
+// Verify forgot email
+const forgotEmailVerifyMethod = async (req, res, next) => {
+    try {
+        const {token, code} = req.body || {};
+        if(!token) throw createError(401, "Token not found");
+        if(!code) throw createError(401, "Code is required");
+
+        const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
+        const {email,otp} = decoded;
+
+        if(!email && !otp){
+            throw createError(401, "Invalid request")
+        }
+      
+        if(otp !== code) throw createError(404,"Invalid your verify request")
+
+        const user = await User.findOne({email}).select('_id email');
+        if(!user) throw createError(404, "User not found");
+
+        // Generate a new token
+         const newToken = await createJwtToken( {
+            id: user?._id,
+        }, JWT_REGISTER_SECRET, '10m')
+        
+
+         return successResponse(res, {
+            message:"Success",
+            statusCode:200,
+            payload: {
+                token: newToken
+            }
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+// Change forgot Password || Reset password
+const changeForgotPassword = async (req, res, next) => {
     try {
         // Get token and password from request body
-        const token = req.body?.token;
-        const {password} = req.body || {};
-        if(!token) throw createError(401, "Token not found");
+        const {password,token} = req.body || {};
         if(!password) throw createError(401, "Password is required");
+        if(!token) throw createError(401, "Token not found");
 
         // Verify token
         const decoded =  jwt.verify(token, JWT_REGISTER_SECRET )
-        const email = decoded.email;
+        const id = decoded.id;
 
         // Hash password
         const salt = bcrypt.genSaltSync(10);
         const hashPassword = bcrypt.hashSync(password, salt);
 
         // Update password
-        let user =  await User.findOneAndUpdate({email}, {password: hashPassword}, {new:true})
+        let user =  await User.findByIdAndUpdate(id, {password: hashPassword}, {new:true})
         if(!user) throw createError(404, "User don't created")
 
         // convert to plain object and remove password
@@ -260,7 +296,7 @@ const resetPassword = async (req, res, next) => {
         // Send response
         return successResponse(res, {
             message:"Success",
-            statusCode:201,
+            statusCode:200,
             payload: user
         })
 
@@ -269,8 +305,11 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
-// Change password
-const chnagePassword = async (req, res, next) => {
+
+
+
+// Change password for authenticated user
+const chnagePasswordForAuthUser = async (req, res, next) => {
     try {
  
         const {password,userId,oldPassword} = req.body || {};
@@ -336,6 +375,7 @@ module.exports = {
     loginUser ,
     logoutUser,
     forgotPassword,
-    resetPassword,
-    chnagePassword
+    changeForgotPassword,
+    forgotEmailVerifyMethod,
+    chnagePasswordForAuthUser
 }

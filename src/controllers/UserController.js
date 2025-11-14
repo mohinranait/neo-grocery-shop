@@ -186,10 +186,35 @@ const getUsersStatics = async (req, res, next) => {
 }
 
 
+// Delete user controller
+const deleteUser = async (req, res, next) => {
+    try {
+        const userId = req.params?.userId;
+        const role = req.user?.role;
+
+        
+        if(role !== 'Manager' && role !== 'Admin'){
+            throw createError(401, "Your delete permission not allow");
+        }
+
+        // Delete user
+        const user = await User.findByIdAndDelete(userId).select('-password');
+         if(!user) throw createError(404, "User not-found");
+         return successResponse(res, {
+            message: "Success",
+            payload:user,
+            statusCode:200
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     findUserById,
     updateUserById,
     getAllUsers,
     getAuthenticatedUser,
-    getUsersStatics
+    getUsersStatics,
+    deleteUser
 }
