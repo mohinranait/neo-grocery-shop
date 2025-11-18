@@ -260,11 +260,266 @@ const deleteProductById = async (req, res, next) => {
     }
 }
 
+
+/**
+ * @api {get} /products?accessBy=User -> get all products
+ * @query {accessBy=[User, Admin,Manager]}
+*/
+const getAllProductsForClient = async (req, res, next) => {
+  try {
+    // ------------------ QUERY PARAMS ------------------
+    const {
+      search = "",
+      category = "",
+      priceRange = "",
+      brands = "",
+      ratings = "",
+      shipping = "",
+      page = 1,
+      limit = 20,
+      sort = "asc",
+      sortField = "name",
+      features = "All",
+    } = req.query;
+
+    console.log({sort, sortField});
+    
+
+    // ------------------ BUILD MONGO QUERY ------------------
+    let query = { status: "Active" };
+
+    // SEARCH
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { name: searchRegex },
+        { slug: searchRegex },
+        { skuCode: searchRegex },
+      ];
+    }
+
+    console.log({page, limit});
+    
+
+    // CATEGORY (multi)
+    if (category) {
+      query.category = { $in: category.split(",") };
+    }
+
+    // BRANDS (multi)
+    if (brands) {
+      query.brand = { $in: brands.split(",") };
+    }
+
+    // SHIPPING (free or paid)
+    if (shipping) {
+      query.freeShipping = shipping === "free" ? "yes" : "no";
+    }
+
+    // FEATURES
+    if (features !== "All") query.isFeature = features;
+
+    // SORT ORDER
+    const sortOrder = sort === "asc" ? 1 : -1;
+
+    // ------------------ AGGREGATION PIPELINE ------------------
+    const pipeline = [
+      { $match: query },
+
+      // ------------------ PRICE CALCULATION ------------------
+      {
+        $addFields: {
+          variableMin: {
+            $cond: [
+              { $eq: ["$variant", "Variable Product"] },
+              {
+                $min: {
+                  $map: {
+                    input: "$variations",
+                    as: "v",
+                    in: {
+                      $cond: [
+                        { $gt: ["$$v.offerPrice", 0] },
+                        "$$v.offerPrice",
+                        "$$v.productPrice",
+                      ],
+                    },
+                  },
+                },
+              },
+              null,
+            ],
+          },
+          variableMax: {
+            $cond: [
+              { $eq: ["$variant", "Variable Product"] },
+              {
+                $max: {
+                  $map: {
+                    input: "$variations",
+                    as: "v",
+                    in: {
+                      $cond: [
+                        { $gt: ["$$v.offerPrice", 0] },
+                        "$$v.offerPrice",
+                        "$$v.productPrice",
+                      ],
+                    },
+                  },
+                },
+              },
+              null,
+            ],
+          },
+          singleFinalPrice: {
+            $cond: [
+              { $ne: ["$variant", "Variable Product"] },
+              {
+                $let: {
+                  vars: {
+                    price: "$price.productPrice",
+                    discountValue: "$price.discountValue",
+                    discountType: "$price.discountType",
+                    start: "$offerDate.start_date",
+                    end: "$offerDate.end_date",
+                    now: new Date(),
+                  },
+                  in: {
+                    $cond: [
+                      { $and: [{ $lte: ["$$start", "$$now"] }, { $gte: ["$$end", "$$now"] }] },
+                      {
+                        $cond: [
+                          { $eq: ["$$discountType", "fixed"] },
+                          { $subtract: ["$$price", "$$discountValue"] },
+                          {
+                            $cond: [
+                              { $eq: ["$$discountType", "percent"] },
+                              { $subtract: ["$$price", { $multiply: ["$$price", { $divide: ["$$discountValue", 100] }] }] },
+                              "$$price",
+                            ],
+                          },
+                        ],
+                      },
+                      "$$price",
+                    ],
+                  },
+                },
+              },
+              null,
+            ],
+          },
+          searchPriceMin: { $cond: [{ $eq: ["$variant", "Variable Product"] }, "$variableMin", "$singleFinalPrice"] },
+          searchPriceMax: { $cond: [{ $eq: ["$variant", "Variable Product"] }, "$variableMax", "$singleFinalPrice"] },
+        },
+      },
+
+      // ------------------ PRICE RANGE FILTER ------------------
+  ...(priceRange
+  ? (() => {
+      const [minP, maxP] = priceRange.split(",").map(Number);
+      return [
+        {
+          $match: {
+            $or: [
+              // Single product price in range
+              {
+                $and: [
+                  { variant: { $ne: "Variable Product" } },
+                  { singleFinalPrice: { $gte: minP, $lte: maxP } },
+                ],
+              },
+              // Variable product price range overlap
+              {
+                $and: [
+                  { variant: "Variable Product" },
+                  { variableMax: { $gte: minP } },
+                  { variableMin: { $lte: maxP } },
+                ],
+              },
+            ],
+          },
+        },
+      ];
+    })()
+  : []),
+
+      // ------------------ COMMENTS LOOKUP ------------------
+      {
+        $lookup: {
+          from: "comments",
+          let: { pid: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$productId", "$$pid"] }, isApproved: true } },
+            { $group: { _id: null, totalComments: { $sum: 1 }, avgRating: { $avg: "$rating" } } },
+          ],
+          as: "commentStats",
+        },
+      },
+
+      {
+        $addFields: {
+          totalComments: { $ifNull: [{ $first: "$commentStats.totalComments" }, 0] },
+          avgRating: { $ifNull: [{ $round: [{ $first: "$commentStats.avgRating" }, 0] }, 0] },
+        },
+      },
+
+      // ------------------ RATING FILTER (radio / multi-checkbox) ------------------
+         ...(ratings
+    ? [{ $match: { avgRating: { $gte: Number(ratings), $lt: Number(ratings) + 1 } } }]
+    : []),
+
+      // ------------------ SORT ------------------
+      { $sort: { [sortField]: sortOrder } },
+
+      // ------------------ PAGINATION ------------------
+      { $skip: (Number(page) - 1) * limit },
+      { $limit: Number(limit) },
+
+      // ------------------ REMOVE HEAVY FIELDS ------------------
+      {
+        $project: {
+          seo_title: 0,
+          seo_desc: 0,
+          seo_keyword: 0,
+          details: 0,
+          productFeatures: 0,
+          short_details: 0,
+          commentStats: 0,
+        },
+      },
+    ];
+
+    // ------------------ EXECUTE PIPELINE ------------------
+    const products = await Product.aggregate(pipeline);
+
+    // ------------------ COUNT WITHOUT PAGINATION ------------------
+    const totalPipeline = pipeline.filter((p) => !("$skip" in p) && !("$limit" in p));
+    const total = await Product.aggregate([...totalPipeline, { $count: "total" }]);
+
+    return successResponse(res, {
+      message: "Success",
+      statusCode: 200,
+      payload: {
+        products,
+        limit,
+        total: total[0]?.total || 0,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+
+
 module.exports = {
     createNewProduct,
     getAllProducts,
     getSingleProductById,
     getSingleProductBySlug,
     updateProductByID,
-    deleteProductById
+    deleteProductById,
+    getAllProductsForClient
 }
