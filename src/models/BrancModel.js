@@ -18,7 +18,10 @@ const brandSchema = new Schema({
     brandThumbnail: {
         type: String,
     },
-   status: {
+    categoryIds:{
+        type : [String],
+    },
+    status: {
         type: String,
         default: "Active",
         enum: ["Active", "Inactive"]

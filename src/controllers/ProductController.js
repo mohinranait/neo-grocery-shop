@@ -275,18 +275,19 @@ const getAllProductsForClient = async (req, res, next) => {
       brands = "",
       ratings = "",
       shipping = "",
+      stock = "",
       page = 1,
       limit = 20,
       sort = "asc",
       sortField = "name",
-      features = "All",
+      feature = "All",
     } = req.query;
 
-    console.log({sort, sortField});
-    
-
     // ------------------ BUILD MONGO QUERY ------------------
-    let query = { status: "Active" };
+    let query = { 
+      status: "Active",
+      publish_date: {$lte: new Date()  }
+    };
 
     // SEARCH
     if (search) {
@@ -297,9 +298,6 @@ const getAllProductsForClient = async (req, res, next) => {
         { skuCode: searchRegex },
       ];
     }
-
-    console.log({page, limit});
-    
 
     // CATEGORY (multi)
     if (category) {
@@ -313,11 +311,18 @@ const getAllProductsForClient = async (req, res, next) => {
 
     // SHIPPING (free or paid)
     if (shipping) {
-      query.freeShipping = shipping === "free" ? "yes" : "no";
+      query.freeShipping = shipping ;
     }
+    
+
+    // AVAILABLE STOCK QUANTITY
+    if(Boolean(stock)){
+      query.isStock = { $gt : 0 } 
+    } 
+    
 
     // FEATURES
-    if (features !== "All") query.isFeature = features;
+    if (Boolean(feature)) query.isFeature = "Active";
 
     // SORT ORDER
     const sortOrder = sort === "asc" ? 1 : -1;
