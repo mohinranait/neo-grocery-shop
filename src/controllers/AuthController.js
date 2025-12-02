@@ -8,7 +8,7 @@ const createError = require("http-errors");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { jwtSecret, CLIENT_URL, productionMode,JWT_REGISTER_SECRET } = require("../accessEnv");
-const { generatePasswordHash, generateOTP } = require("../utils/helpers");
+const { generatePasswordHash, generateOTP, getAppServiceForServer } = require("../utils/helpers");
 const { verifyEmailTemplate } = require("../emails/verify-email-template");
 
 /**
@@ -51,7 +51,7 @@ const registerNewUser = async (req, res,next) => {
             emails: email,
             subject: "Account verify email",
             text: "Hello world",
-             html: verifyEmailTemplate({fullName, otp, expiry_minutes: 30, company_name: "BrandCollectionBD"})
+             html: verifyEmailTemplate({fullName, otp, expiry_minutes: 30, company_name: getAppServiceForServer?.email?.senderName})
          
         }
 
@@ -209,7 +209,7 @@ const forgotPassword = async (req, res, next) => {
             emails: email,
             subject: "Reset password",
             text: "Hello world",
-            html: verifyEmailTemplate({fullName, otp, expiry_minutes: 10, company_name: "BrandCollectionBD"})
+            html: verifyEmailTemplate({fullName, otp, expiry_minutes: 10, company_name: getAppServiceForServer?.email?.senderName})
         }
 
         try { 
