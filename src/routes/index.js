@@ -1,4 +1,5 @@
 const addressRoute = require("./addressRoute");
+const appService = require("./appServiceRoute");
 const attributeRoute = require("./attributeRoute");
 const brandRoute = require("./brandRoute");
 const categoryRoute = require("./categoryRoute");
@@ -10,6 +11,7 @@ const uploadImageRouter = require("./mediaRoute");
 const orderRouter = require("./orderRoute");
 const productRoute = require("./productRoute");
 const sectionRoute = require("./sectionRoute");
+const settingRoute = require("./settingRoute");
 const shoppingCartRoute = require("./shoppingCartRoute");
 const userRoute = require("./userRoute");
 
@@ -28,5 +30,7 @@ module.exports =
     addressRoute,
     commentRoute,
     dealRoute,
-    sectionRoute
+    sectionRoute,
+    appService,
+    settingRoute
 }
