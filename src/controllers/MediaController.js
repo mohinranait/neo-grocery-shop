@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const createError = require('http-errors');
 const { successResponse } = require('../utils/responseHandler');
-const cloudinary = require('../config/cloudinary');
 const Media = require('../models/MediaModel');
+const configureCloudinary = require('../config/cloudinary');
+const { AppIntegration } = require('../models/AppServiceModel');
 
 
 // Update profile by ID
@@ -12,12 +13,30 @@ const uploadImage = async (req, res, next) => {
         const image = req.file?.path;
         const fileType = req?.body?.fileType;
 
-        // upload profile image
-        const imageRes = await cloudinary.uploader.upload(image, {
-            folder: 'neo-grocery',
-        })
+        // Get cloudinary config from DB
+         let integrations = await AppIntegration.findOne({});
+        if (!integrations) {
+            integrations = await AppIntegration.create({});
+        }
 
-        const { url, format, width, height, bytes } = imageRes;
+        const cloudinary  = configureCloudinary({
+            cloudName: integrations?.cloudinary?.cloudName,
+            apiKey: integrations?.cloudinary?.apiKey,
+            apiSecret: integrations?.cloudinary?.apiSecret,
+        }) 
+
+        // Checked if cloudinary integration is active
+        if(integrations?.cloudinary?.isActive !== true){
+            throw createError(503, "Cloudinary integration is not active")
+        }
+
+        // upload profile image and Store in Shikder-Zone folder
+        const imageRes = await cloudinary.uploader.upload(image, {
+            folder: 'brand-collection',
+        })
+        
+
+        const { url, format, width, height, bytes, original_filename, public_id } = imageRes;
 
 
         const file = await Media.create({
@@ -27,6 +46,8 @@ const uploadImage = async (req, res, next) => {
             height,
             extension: format,
             size: bytes,
+            fileName: original_filename,
+            public_id
         })
 
 
@@ -47,6 +68,7 @@ const uploadImage = async (req, res, next) => {
         next(error)
     }
 }
+
 
 const getAllMedias = async (req, res,next) => {
     try {

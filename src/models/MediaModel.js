@@ -12,6 +12,9 @@ const fileSchema = new Schema({
     fileName: {
         type: String,
     },
+    public_id: {
+        type: String,
+    },
     width: {
         type: Number,
     },

@@ -7,6 +7,7 @@ const cors = require('cors');
 const { errorResponse } = require('./utils/responseHandler');
 const { connectMongodbDatabase } = require('./config/connectDb');
 const { userRoute, categoryRoute, attributeRoute, configAttrRoute, brandRoute, productRoute, uploadImageRouter, favoriteRoute, shoppingCartRoute, orderRouter, addressRoute, commentRoute, dealRoute, sectionRoute } = require('./routes');
+const appService = require('./routes/appServiceRoute');
 
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api', addressRoute);
 app.use('/api', commentRoute);
 app.use('/api', dealRoute)
 app.use('/api', sectionRoute)
+app.use("/api/integrations", appService);
 
 
 // Default route
